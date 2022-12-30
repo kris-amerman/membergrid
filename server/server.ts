@@ -4,9 +4,6 @@ import http from "http";
 import { 
     Client, 
     isFullPage, 
-    isNotionClientError,
-    ClientErrorCode,
-    APIErrorCode 
 } from "@notionhq/client";
 
 // The host address of this server
@@ -43,7 +40,6 @@ try {
     const server = http.createServer(async (req, res) => {
         // Avoid CORS issues (!! TODO FIX FOR PROD !!)
         res.setHeader("Access-Control-Allow-Origin", "*");
-        console.log(req.url)
         switch (req.url) {
             // Request URL is root domain 
             case "/":
@@ -52,19 +48,24 @@ try {
                 const response = await notion.databases.query({
                     database_id: notionDatabaseId
                 });
-
-                const list: TestData[] = response.results.map((page) => {
-                    if (!isFullPage(page)) {
-                        return { name: "NOT_FOUND", info: "" };
+                
+                // Build the response list based on the Notion response
+                const list: TestData[] = response.results.map((row) => {
+                    // If row is a `PartialPageObjectResponse`, return data 
+                    // in the expected shape but with a PARTIAL_PAGE label
+                    if (!isFullPage(row)) {
+                        return { name: "PARTIAL_PAGE", info: "" };
                     }
-                    // The page variable has been narrowed from PageObjectResponse | PartialPageObjectResponse to PageObjectResponse.
-                    const nameCell = page.properties.name
-                    const infoCell = page.properties.info
-                    const isName = nameCell.type === "title" && nameCell.title.length;
-                    const isInfo = infoCell.type === "rich_text" && infoCell.rich_text.length;
+                    // Database entries
+                    const nameCell = row.properties.name
+                    const infoCell = row.properties.info
+                    // Entry type rules
+                    const isName = nameCell.type === "title" 
+                    const isInfo = infoCell.type === "rich_text" 
+                    // Return valid data in the expected shape
                     if (isName && isInfo) {
-                        const name = nameCell.title?.[0].plain_text;
-                        const info = infoCell.rich_text?.[0].plain_text;
+                        const name = nameCell.title.length ? nameCell.title?.[0].plain_text : '';
+                        const info = infoCell.rich_text.length ? infoCell.rich_text?.[0].plain_text : '';
                         return { name, info };
                     }
                     // If a row is found that does not match the type rules, 
