@@ -27,8 +27,10 @@ function useMembersSource(): {
   search: string
   setSearch: (search: string) => void
 } {
-  // Use useQuery to retrieve data.
-  // (Note: sorts data on first load instead of on useMemo).
+  // Use useQuery to retrieve data. Checks cache to see if all the requested 
+  // data is already available locally. If all data is available locally, 
+  // useQuery returns that data and doesn't query the DB. 
+  // (Note: sorts data on first load/update instead of on useMemo).
   const { data: members } = useQuery<Member[]>(
     ["members"],
     () => fetch(DATA_SOURCE)
