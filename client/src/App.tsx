@@ -113,6 +113,19 @@ function App() {
         {JSON.stringify(members)}
       </div>
       <div>
+        <button
+          onClick={() => {
+            fetch('http://localhost:8000/')
+              .then((response) => response.json())
+              .then((payload) => {
+                console.log(payload)
+              });
+          }}
+        >
+          Fetch data
+        </button>
+      </div>
+      <div>
         <QueryClientProvider client={queryClient}>
           <MemberProvider>
             <div className="mx-auto max-w-3xl">
