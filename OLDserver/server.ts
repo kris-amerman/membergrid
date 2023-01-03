@@ -12,8 +12,6 @@ import {
 const HOST = "localhost";
 // The port associated with this server
 const PORT = 8000;
-// The accepted requests origin (only allow requests from the application)
-const ORIGIN = "http://localhost:5173/"
 
 // Defines the shape of an entry in the database
 interface TestData {
@@ -43,7 +41,7 @@ try {
     // HTTP messages, outgoing HTTP server responses, and DB query await
     const server = http.createServer(async (req, res) => {
         // Avoid CORS issues (!! TODO FIX FOR PROD !!)
-        res.setHeader("Access-Control-Allow-Origin", ORIGIN);
+        res.setHeader("Access-Control-Allow-Origin", "*");
         console.log(res.getHeaders())
         switch (req.url) {
             // Request URL is root domain 
