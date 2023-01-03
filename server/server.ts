@@ -1,4 +1,6 @@
 // TODO --- replace `TestData` with prod database (TAMID member cards)
+// TODO --- update CORS policy
+// TODO --- add OAuth middleware functionality 
 import dotenv from "dotenv";
 import http from "http";
 import { 
@@ -7,9 +9,11 @@ import {
 } from "@notionhq/client";
 
 // The host address of this server
-const host = "localhost";
+const HOST = "localhost";
 // The port associated with this server
-const port = 8000;
+const PORT = 8000;
+// The accepted requests origin (only allow requests from the application)
+const ORIGIN = "http://localhost:5173/"
 
 // Defines the shape of an entry in the database
 interface TestData {
@@ -39,7 +43,8 @@ try {
     // HTTP messages, outgoing HTTP server responses, and DB query await
     const server = http.createServer(async (req, res) => {
         // Avoid CORS issues (!! TODO FIX FOR PROD !!)
-        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Origin", ORIGIN);
+        console.log(res.getHeaders())
         switch (req.url) {
             // Request URL is root domain 
             case "/":
@@ -95,8 +100,8 @@ try {
     });
 
     // Start the server instance on `host`:`port` and listen for connections
-    server.listen(port, host, () => {
-        console.log(`Server is running on http://${host}:${port}`);
+    server.listen(PORT, HOST, () => {
+        console.log(`Server is running on http://${HOST}:${PORT}`);
     });
 
 } catch (error: unknown) {
