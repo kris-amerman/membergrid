@@ -10,95 +10,114 @@ import {
   useMemo
 } from 'react'
 
+// Where to fetch the data from (e.g. file path or proxy URL)
+const DATA_SOURCE: string = 'http://localhost:8000/';
+
+// Member entry from Notion database
 interface Member {
-  Name: string
+  name: string
+  // ... 
 }
 
+// Custom hook to fetch and filter data from Notion.
+// Returns an array of Member, the current search string, 
+// and a setSearch callback.
 function useMembersSource(): {
   members: Member[]
   search: string
   setSearch: (search: string) => void
 } {
-  // useQuery to retrieve data -- sorts data on first load instead of w/ useMemo
+  // Use useQuery to retrieve data. Checks cache to see if all the requested 
+  // data is already available locally. If all data is available locally, 
+  // useQuery returns that data and doesn't query the DB. 
+  // (Note: sorts data on first load/update instead of with useMemo).
   const { data: members } = useQuery<Member[]>(
     ["members"],
-    () => fetch("/membercards.json")
+    () => fetch(DATA_SOURCE)
       .then((res) => res.json())
       .then((data) => {
         console.log("SORT")
-        return data.sort((a: Member, b: Member) => a.Name.localeCompare(b.Name))
+        return data.sort((a: Member, b: Member) => a.name.localeCompare(b.name))
       }),
-    { initialData: [] } // does not eliminate T | undefined in TS
+    { initialData: [] } // does not eliminate <T | undefined> in TS
   )
-  type MemberState = {
+  // The state of the members is defined by the current search string.
+  type MembersState = {
     search: string
   }
-  type MemberAction = {
+  // An action that allows the modification of the search string. 
+  type MembersAction = {
     type: "setSearch"
     payload: string
   }
 
-  // Member data and search string
+  // Facilitate search input via reducer (allows us to pass dispatch down
+  // instead of callbacks)
   const [{ search }, dispatch] = useReducer(
-    (state: MemberState, action: MemberAction) => {
+    (state: MembersState, action: MembersAction) => {
       switch(action.type) {
         case "setSearch":
+          // Take current search string (state) and update it 
           return { ...state, search: action.payload }
       }
   }, {
     search: ""
-  })
+  });
 
   // We're not exposing dispatch outside of useMembersSource, so we need a way
-  // to offer setSearch beyond this component (e.g., in onChange for SearchBox)
-  // should always use useCallback in custom hooks when you're defining a 
-  // function that you're returning
+  // to offer setSearch beyond this component (e.g., in onChange for SearchBox).
+  // (Sidenote: you should always use useCallback in custom hooks when you're 
+  // defining a function that you're returning)
   const setSearch = useCallback((search: string) => {
+    // Take the search string and call the reducer dispatch to update the 
+    // search string state
     dispatch({
       type: "setSearch",
       payload: search
-    })
-  }, []) 
+    });
+  }, []);
 
-  // uses non-null assertion operator (!) because TypeScript doesn't allow scope narrowing with useQuery destructuring
+  // Filter members based on search and only present the first 20 results. 
+  // (Note: we could also offer sorting in this useMemo, but it was decided that
+  // sorting could be done on a first load instead).
+  // (Also note: uses non-null assertion operator `!` because TypeScript doesn't 
+  // allow scope narrowing with useQuery destructuring).
   const filteredMembers = useMemo(() => {
-    return members!.filter((m) => m.Name.toLowerCase().includes(search.toLowerCase())).slice(0, 20)
-  }, [members, search])
+    return members!.filter(
+      (m) => m.name.toLowerCase().includes(search.toLowerCase())
+    ).slice(0, 20);
+  }, [members, search]);
 
-  // Should we just sort on first load instead? 
-  // const sortedMembers = useMemo(() => {
-  //   console.log("SORT")
-  //   return [...filteredMember].sort((a, b) => a.name.localeCompare(b.name))
-  // }, [filteredMember])
+  // Return `members` as `filteredMembers`, the current `search` string, and the
+  // `setSearch` callback
+  return { members: filteredMembers, search, setSearch };
+};
 
-  // Return filteredMember as Member (for object destructuring)
-  return { members: filteredMembers, search, setSearch }
-}
-
-const MemberContext = createContext<
+// Create a custom members Context object with a default value of `undefined`.
+// Context value is either `typeof useMembersSource` or `undefined`. 
+const MembersContext = createContext<
   ReturnType<typeof useMembersSource> | undefined
->(undefined)
+>(undefined);
 
-// Returns the context value for the calling component, in our case, MemberList.
-// MemberList is nested inside of a MemberProvider, which has a context value of
-// useMembersSource(). The context itself does not hold the information, 
-// it only represents the kind of information you can provide or read from components.
-
-// Simple terms: useMembers is a custom useContext, 
-// useContext returns the value from the context provider,
-// the context provider offers a value prop that can be accessed by descendents 
+// Export a custom useContext hook to obtain the context 
+// value of `MembersContext`. 
 export function useMembers() {
-  return useContext(MemberContext)!
-}
+  // Accepts a MembersContext object and returns the current context value for
+  // that context. Also, asserts that useContext will not return `undefined`.
+  return useContext(MembersContext)!
+};
 
-export function MemberProvider({
-    children
+// Export a `MembersContext` provider that allows consuming 
+// children components to subscribe to `MembersContex` changes.
+// Offers the value of `useMembersSource` to children.   
+export function MembersProvider({
+  children
 }: {
-    children: React.ReactNode
+  children: React.ReactNode
 }) {
-    return (
-      <MemberContext.Provider value={(useMembersSource())}>
-          {children}
-      </MemberContext.Provider>
-    )
-}
+  return (
+    <MembersContext.Provider value={(useMembersSource())}>
+      {children}
+    </MembersContext.Provider>
+  )
+};
