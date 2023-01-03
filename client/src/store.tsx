@@ -30,7 +30,7 @@ function useMembersSource(): {
   // Use useQuery to retrieve data. Checks cache to see if all the requested 
   // data is already available locally. If all data is available locally, 
   // useQuery returns that data and doesn't query the DB. 
-  // (Note: sorts data on first load/update instead of on useMemo).
+  // (Note: sorts data on first load/update instead of with useMemo).
   const { data: members } = useQuery<Member[]>(
     ["members"],
     () => fetch(DATA_SOURCE)
@@ -39,7 +39,7 @@ function useMembersSource(): {
         console.log("SORT")
         return data.sort((a: Member, b: Member) => a.name.localeCompare(b.name))
       }),
-    { initialData: [] } // does not eliminate T | undefined in TS
+    { initialData: [] } // does not eliminate <T | undefined> in TS
   )
   // The state of the members is defined by the current search string.
   type MembersState = {
@@ -103,12 +103,13 @@ const MembersContext = createContext<
 // value of `MembersContext`. 
 export function useMembers() {
   // Accepts a MembersContext object and returns the current context value for
-  // that context. Asserts that useContext will not return `undefined`.
+  // that context. Also, asserts that useContext will not return `undefined`.
   return useContext(MembersContext)!
 };
 
-// Export a members context provider that allows consuming 
-// children components to subscribe to `MembersContex` changes.  
+// Export a `MembersContext` provider that allows consuming 
+// children components to subscribe to `MembersContex` changes.
+// Offers the value of `useMembersSource` to children.   
 export function MembersProvider({
   children
 }: {
