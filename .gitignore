@@ -1,10 +1,6 @@
 # env
 .env
 
-# Build (dist)
-build
-dist
-
 # Logs
 logs
 *.log

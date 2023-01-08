@@ -2,8 +2,7 @@
 .env
 
 # Build (dist)
-build
-dist
+build/dist
 
 # Logs
 logs
