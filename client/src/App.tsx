@@ -1,90 +1,42 @@
-import { useEffect, useState } from 'react';
-import React from 'react';
+import React, { useContext } from 'react';
+import axios from 'axios';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MembersProvider, useMembers } from "./store";
+import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 
-const queryClient = new QueryClient();
-
-function SearchBox() {
-  const { search, setSearch } = useMembers();
-  return (
-    <input
-      className="mt-3 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-800 focus:ring-indigo-800 sm:text-lg p-2"
-      placeholder="Search"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
-  );
-}
-
-const MemberCards = () => {
-  const { members } = useMembers();
-  return (
-    <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-3">
-      {members.map((m) => (
-        <li key={m.name} className="col-span-1 flex flex-col text-center bg-white rounded-lg shadow divide-y divide-gray-200">
-          <div className="flex-1 flex flex-col p-8">
-            <img
-              className="w-32 h-32 flex-shrink-0 mx-auto bg-black rounded-full"
-              src={``}
-              alt={`${m.name}`}
-            />
-            <h3 className="mt-6 text-gray-900 text-sm font-medium">
-              {m.name}
-            </h3>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-};
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import MembersPage from './pages/MembersPage';
+import PrivateRoutes from './utils/PrivateRoutes';
+import { UserContext } from './contexts/UserContext';
 
 function App() {
 
-  const SignOut = () => {
-    // auth.currentUser &&
-    return (
-      <button onClick={() => {}}>Sign out</button>
-    )
-  } 
-
-  const signInWithGoogle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    // ...
-  }
+  // On logout, should refresh the page or send back to sign in page 
+  const logout = () => {
+    axios.get('http://localhost:4000/logout', { withCredentials: true })
+      .then(res => {
+        console.log(res)
+        if (res.data) {
+          window.location.href = '/';
+        }
+      });
+  };
 
   return (
     <div>
-      {/* {user ? <h1>USER</h1> : <h1>NO USER</h1>} */}
-      <button onClick={signInWithGoogle}>Login</button>
-      <SignOut />
-      <div>
-        <button
-          onClick={() => {
-            fetch('http://localhost:8000/')
-              .then((response) => response.json())
-              .then((payload) => {
-                console.log(payload)
-              });
-          }}
-        >
-          Fetch data
-        </button>
-      </div>
-      <div>
-        <QueryClientProvider client={queryClient}>
-          {/* QUERY DATABASE --> only offer this view once we've signed in */}
-          <MembersProvider>
-            <div className="mx-auto max-w-3xl">
-              <SearchBox />
-              <MemberCards />
-            </div>
-          </MembersProvider>
-        </QueryClientProvider>
-      </div>
+      {/* <h1>{user ? user.displayName : <></>}</h1> */}
+      <div><button onClick={logout}>Logout</button></div>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<HomePage />} />
+          <Route path='/login' element={<LoginPage />} />
+          <Route element={<PrivateRoutes />}>
+            <Route path='/members' element={<MembersPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </div>
   )
 }
 
-export default App
+export default App;
