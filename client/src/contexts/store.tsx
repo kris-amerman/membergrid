@@ -12,12 +12,15 @@ import {
 } from 'react';
 
 // Where to fetch the data from (e.g. file path or proxy URL)
-const DATA_SOURCE: string = 'http://localhost:4000/getmembers';
+const GET_MEMBERS_ENDPOINT: string = 'http://localhost:4000/getmembers';
+// Number of members to display
+const DISPLAY_COUNT: number = 20;
 
 // Member entry from Notion database
 interface Member {
   name: string
-  // ... 
+  info: string
+  // ...
 }
 
 // Custom hook to fetch and filter data from Notion.
@@ -27,20 +30,28 @@ function useMembersSource(): {
   members: Member[]
   search: string
   setSearch: (search: string) => void
+  showLoading: boolean
 } {
   // Use useQuery to retrieve data. Checks cache to see if all the requested 
   // data is already available locally. If all data is available locally, 
   // useQuery returns that data and doesn't query the DB. 
   // (Note: sorts data on first load/update instead of with useMemo).
-  const { data: members } = useQuery<Member[]>(
+  const { data: members, isFetching } = useQuery<Member[]>(
     ["members"],
-    () => axios.get(DATA_SOURCE, { withCredentials: true }) 
+    () => axios.get(GET_MEMBERS_ENDPOINT, { withCredentials: true }) 
       .then((res) => {
         console.log("SORT")
         return res.data.sort((a: Member, b: Member) => a.name.localeCompare(b.name))
       }),
-    { initialData: [] } // does not eliminate <T | undefined> in TS
+    { 
+      initialData: [], // does not eliminate <T | undefined> in TS
+      refetchOnWindowFocus: false,
+    } 
   )
+  // Indicate that data is loading when fetching (not isLoading); no refetch
+  // on window focus, so "loading" won't get displayed when switching tabs
+  const showLoading: boolean = isFetching
+
   // The state of the members is defined by the current search string.
   type MembersState = {
     search: string
@@ -77,7 +88,7 @@ function useMembersSource(): {
     });
   }, []);
 
-  // Filter members based on search and only present the first 20 results. 
+  // Filter members based on search and only present the first DISPLAY_COUNT results.
   // (Note: we could also offer sorting in this useMemo, but it was decided that
   // sorting could be done on a first load instead).
   // (Also note: uses non-null assertion operator `!` because TypeScript doesn't 
@@ -85,12 +96,13 @@ function useMembersSource(): {
   const filteredMembers = useMemo(() => {
     return members!.filter(
       (m) => m.name.toLowerCase().includes(search.toLowerCase())
-    ).slice(0, 20);
+    ).slice(0, DISPLAY_COUNT);
   }, [members, search]);
+  // TODO ^^ introduce a filter factory for future filters (e.g. filter by tamid_chats, major, class, etc.)
 
   // Return `members` as `filteredMembers`, the current `search` string, and the
   // `setSearch` callback
-  return { members: filteredMembers, search, setSearch };
+  return { members: filteredMembers, search, setSearch, showLoading };
 };
 
 // Create a custom members Context object with a default value of `undefined`.
