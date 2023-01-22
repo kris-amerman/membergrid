@@ -44,7 +44,9 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 // Provide an error to users who forget to create the .env file
 // with the appropriate Notion keys 
 if (!NOTION_DATABASE_ID || !NOTION_SECRET || 
-    !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET) {
+    const crypto = require('crypto');
+    console.log(crypto.randomBytes(20).toString("hex"))
     throw Error("Must define secret keys in .env");
 }
 
