@@ -223,18 +223,6 @@ async function ensureAuthenticated(req: any, res: any, next: any) {
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 async function retrieveDatabase() {
     console.log('Retrieving database...')
     // Query the database and wait for the result
