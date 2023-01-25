@@ -18,9 +18,24 @@ const DISPLAY_COUNT: number = 20;
 
 // Member entry from Notion database
 interface Member {
-  name: string
-  info: string
-  // ...
+  name: string;
+  isActive: string;
+  tamidClass: string;
+  majors: string[];
+  minors: string[];
+  graduationYear: string;
+  hometown: string;
+  instagram: string;
+  linkedin: string;
+  mbtiPersonality: string[];
+  birthday: string;
+  mentorshipStatus: string;
+  northeasternEmail: string;
+  phoneNumber: string;
+  picture: string;
+  trackInvolvement: string;
+  tamidChatsStatus: string;
+  isGraduated: boolean;
 }
 
 // Custom hook to fetch and filter data from Notion.

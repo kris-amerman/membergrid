@@ -21,7 +21,23 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 // Defines the shape of an entry in the database
 interface IEntry {
     name: string;
-    info: string;
+    isActive: string;
+    tamidClass: string;
+    majors: string[];
+    minors: string[];
+    graduationYear: string;
+    hometown: string;
+    instagram: string;
+    linkedin: string;
+    mbtiPersonality: string[];
+    birthday: string;
+    mentorshipStatus: string;
+    northeasternEmail: string;
+    phoneNumber: string;
+    picture: string;
+    trackInvolvement: string;
+    tamidChatsStatus: string;
+    isGraduated: boolean;
 }
 
 // ============================= Setup =============================
@@ -231,34 +247,137 @@ async function retrieveDatabase() {
     const response = await notion.databases.query({
         database_id: NOTION_DATABASE_ID
     });
-
     // Build the response list based on the Notion response
     const list: IEntry[] = response.results.map((row) => {
         // If row is a `PartialPageObjectResponse`, return data 
         // in the expected shape but with a PARTIAL_PAGE label
         if (!isFullPage(row)) {
-            return { name: "PARTIAL_PAGE", info: "" };
+            return badPageObjectResponse('PARTIAL_PAGE');
         }
-        // Database entries
-        const nameCell = row.properties.name
-        const infoCell = row.properties.info
+        // Database entries -- hardcoded for now, in the future build a function to map through each cell, do typechecking, and switch for each type to obtain values (and just send the whole object through)
+        const nameCell = row.properties.name;
+        const isActiveCell = row.properties.isActive;
+        const tamidClassCell = row.properties.tamidClass;
+        const majorsCell = row.properties.majors;
+        const minorsCell = row.properties.minors;
+        const graduationYearCell = row.properties.graduationYear;
+        const hometownCell = row.properties.hometown;
+        const instagramCell = row.properties.instagram;
+        const linkedinCell = row.properties.linkedin;
+        const mbtiPersonalityCell = row.properties.mbtiPersonality;
+        const birthdayCell = row.properties.birthday;
+        const mentorshipStatusCell = row.properties.mentorshipStatus;
+        const northeasternEmailCell = row.properties.northeasternEmail;
+        const phoneNumberCell = row.properties.phoneNumber;
+        const pictureCell = row.properties.picture;
+        const trackInvolvementCell = row.properties.trackInvolvement;
+        const tamidChatsStatusCell = row.properties.tamidChatsStatus;
+        const isGraduatedCell = row.properties.isGraduated;
+
         // Entry type rules
-        const isName = nameCell.type === "title"
-        const isInfo = infoCell.type === "rich_text"
+        const typeName = nameCell.type === "title";
+        const typeIsActive = isActiveCell.type === "select";
+        const typeTamidClass = tamidClassCell.type === "select";
+        const typeMajors = majorsCell.type === "multi_select";
+        const typeMinors = minorsCell.type === "multi_select";
+        const typeGraduationYear = graduationYearCell.type === 'select';
+        const typeHometown = hometownCell.type === 'rich_text';
+        const typeInstagram = instagramCell.type === 'rich_text';
+        const typeLinkedin = linkedinCell.type === 'url';
+        const typeMbtiPersonality = mbtiPersonalityCell.type === 'multi_select';
+        const typeBirthday = birthdayCell.type === 'date';
+        const typeMentorshipStatus = mentorshipStatusCell.type === 'select';
+        const typeNortheasternEmail = northeasternEmailCell.type === 'email';
+        const typePhoneNumber = phoneNumberCell.type === 'phone_number';
+        const typePicture = pictureCell.type === 'files';
+        const typeTrackInvolvement = trackInvolvementCell.type === 'select';
+        const typeTamidChatsStatus = tamidChatsStatusCell.type === 'select';
+        const typeIsGraduated = isGraduatedCell.type === 'checkbox';
+
+        const allTypeChecks = typeName && typeIsActive && typeTamidClass &&
+            typeMajors && typeMinors && typeGraduationYear && typeHometown &&
+            typeInstagram && typeLinkedin && typeMbtiPersonality && typeBirthday &&
+            typeMentorshipStatus && typeNortheasternEmail && typePhoneNumber &&
+            typePicture && typeTrackInvolvement && typeTamidChatsStatus && typeIsGraduated
+
         // Return valid data in the expected shape
-        if (isName && isInfo) {
-            const name = nameCell.title.length ? nameCell.title?.[0].plain_text : '';
-            const info = infoCell.rich_text.length ? infoCell.rich_text?.[0].plain_text : '';
-            return { name, info };
+        if (allTypeChecks) {
+            const name = nameCell.title.length ? nameCell.title[0].plain_text : '';
+            const isActive = isActiveCell.select ? isActiveCell.select.name : '';
+            const tamidClass = tamidClassCell.select ? tamidClassCell.select.name : '';
+            const majors = majorsCell.multi_select.length ? majorsCell.multi_select.map(v => v.name) : [];
+            const minors = minorsCell.multi_select.length ? minorsCell.multi_select.map(v => v.name) : [];
+            const graduationYear = graduationYearCell.select ? graduationYearCell.select.name : '';
+            const hometown = hometownCell.rich_text.length ? hometownCell.rich_text[0].plain_text : '';
+            const instagram = instagramCell.rich_text.length ? instagramCell.rich_text[0].plain_text : '';
+            const linkedin = linkedinCell.url ? linkedinCell.url : '';
+            const mbtiPersonality = mbtiPersonalityCell.multi_select.length ? mbtiPersonalityCell.multi_select.map(v => v.name) : [];
+            const birthday = birthdayCell.date ? birthdayCell.date.start : '';
+            const mentorshipStatus = mentorshipStatusCell.select ? mentorshipStatusCell.select.name : '';
+            const northeasternEmail = northeasternEmailCell.email ? northeasternEmailCell.email : '';
+            const phoneNumber = phoneNumberCell.phone_number ? phoneNumberCell.phone_number : '';
+            const trackInvolvement = trackInvolvementCell.select ? trackInvolvementCell.select.name : '';
+            const tamidChatsStatus = tamidChatsStatusCell.select ? tamidChatsStatusCell.select.name : '';
+            const isGraduated = isGraduatedCell.checkbox;
+            
+            let picture = ''
+            if (pictureCell.files.length && pictureCell.files[0].type === 'file') {
+                picture = pictureCell.files[0].file.url;
+            }
+
+            return { 
+                name,
+                isActive,
+                tamidClass,
+                majors,
+                minors,
+                graduationYear,
+                hometown,
+                instagram,
+                linkedin,
+                mbtiPersonality,
+                birthday,
+                mentorshipStatus,
+                northeasternEmail,
+                phoneNumber,
+                picture,
+                trackInvolvement,
+                tamidChatsStatus,
+                isGraduated
+            };
         }
+
         // If a row is found that does not match the type rules, 
         // it will still return data in the expected shape but 
         // with a NOT_FOUND label
-        return { name: "NOT_FOUND", info: "" };
+        return badPageObjectResponse('NOT_FOUND');
     });
 
     // Log response data
     console.log(list)
 
     return list;
+}
+
+function badPageObjectResponse(errorName: string): IEntry {
+    return {
+        name: errorName,
+        isActive: '',
+        tamidClass: '',
+        majors: [],
+        minors: [],
+        graduationYear: '',
+        hometown: '',
+        instagram: '',
+        linkedin: '',
+        mbtiPersonality: [],
+        birthday: '',
+        mentorshipStatus: '',
+        northeasternEmail: '',
+        phoneNumber: '',
+        picture: '',
+        trackInvolvement: '',
+        tamidChatsStatus: '',
+        isGraduated: false
+    };
 }
