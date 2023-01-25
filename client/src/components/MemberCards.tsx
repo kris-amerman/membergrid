@@ -1,11 +1,12 @@
 import React from 'react';
 import { useMembers } from "../contexts/store";
+import LoadingSpinner from './LoadingSpinner';
 
 const MemberCards = () => {
     const { members, showLoading } = useMembers();
     return (
         <div>
-            {showLoading ? <h1>LOADING ...</h1> : <></>}
+            {showLoading ? <LoadingSpinner /> : <></>}
             <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-3">
                 {members.map((m) => (
                     <li key={m.name} className="col-span-1 flex flex-col text-center bg-white rounded-lg shadow divide-y divide-gray-200">

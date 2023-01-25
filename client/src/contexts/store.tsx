@@ -110,7 +110,7 @@ function useMembersSource(): {
   // allow scope narrowing with useQuery destructuring).
   const filteredMembers = useMemo(() => {
     return members!.filter(
-      (m) => m.name.toLowerCase().includes(search.toLowerCase())
+      (m) => m.name.toLowerCase().includes(search.toLowerCase()) // TODO !! also allow searching by other attributes 
     ).slice(0, DISPLAY_COUNT);
   }, [members, search]);
   // TODO ^^ introduce a filter factory for future filters (e.g. filter by tamid_chats, major, class, etc.)
