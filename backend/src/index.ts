@@ -48,6 +48,9 @@ const HOST = 'localhost';
 const PORT = 4000;
 // The accepted CORS origin (React application)
 const CORS_ORIGIN = 'http://localhost:5173';
+// Session cookie max age (in milliseconds; 1 hour)
+// how long before user has to sign in again on refresh
+const MAX_SESSION_AGE = 60 * 60 * 10000
 
 // Load environment variables from `.env` file into `process.env`
 dotenv.config();
@@ -92,7 +95,7 @@ app.use(
         saveUninitialized: false,
         cookie: {
             secure: false, // if true, https must be enabled 
-            maxAge: 900000 // (in milliseconds) 15 minutes
+            maxAge: MAX_SESSION_AGE
         }
     })
 );

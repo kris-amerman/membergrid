@@ -23,13 +23,16 @@ function App() {
   };
 
   return (
-    <div className='p-10 mr-auto'>
+    <div className='p-10'>
       {/* <h1>{user ? user.displayName : <></>}</h1> */}
       <div><button onClick={logout}>Logout</button></div>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<HomePage />} />
           <Route path='/login' element={<LoginPage />} />
+          {/* /members is a protected route --> 
+          if a user exists render child route's element 
+          otherwise navigate to login */}
           <Route element={<PrivateRoutes />}>
             <Route path='/members' element={<MembersPage />} />
           </Route>
