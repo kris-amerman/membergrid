@@ -23,7 +23,7 @@ function App() {
   };
 
   return (
-    <div>
+    <div className='p-10 mr-auto'>
       {/* <h1>{user ? user.displayName : <></>}</h1> */}
       <div><button onClick={logout}>Logout</button></div>
       <BrowserRouter>

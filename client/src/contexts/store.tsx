@@ -60,7 +60,7 @@ function useMembersSource(): {
       }),
     { 
       initialData: [], // does not eliminate <T | undefined> in TS
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: false, // must reload page to receive updates 
     } 
   )
   // Indicate that data is loading when fetching (not isLoading); no refetch
