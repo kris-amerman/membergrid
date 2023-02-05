@@ -18,6 +18,7 @@ export default function MembersPage() {
                         <div>
                             <img src={logo} className='scale-[.75]' />
                         </div>
+    
                         <div className='mx-auto max-w-3xl'>
                             <SearchBox />
                         </div>

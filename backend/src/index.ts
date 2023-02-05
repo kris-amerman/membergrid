@@ -13,6 +13,7 @@ import {
     isFullPage,
 } from "@notionhq/client";
 import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { collectPaginatedAPI } from '@notionhq/client/build/src/helpers';
 
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
@@ -175,7 +176,7 @@ app.get('/getmembers', async (req, res) => {
         // Fetch members
         retrieveDatabase().then((members) => {
             res.send(JSON.stringify(members));
-            console.log('Success!');
+            console.log(`Success! Num entires: ${members.length}`);
         })
     });
 });
@@ -247,11 +248,13 @@ async function ensureAuthenticated(req: any, res: any, next: any) {
 async function retrieveDatabase() {
     console.log('Retrieving database...')
     // Query the database and wait for the result
-    const response = await notion.databases.query({
-        database_id: NOTION_DATABASE_ID
-    });
+    const response = await collectPaginatedAPI(
+        notion.databases.query,
+        { database_id: NOTION_DATABASE_ID }
+    );
+    
     // Build the response list based on the Notion response
-    const list: IEntry[] = response.results.map((row) => {
+    const list: IEntry[] = response.map((row) => {
         // If row is a `PartialPageObjectResponse`, return data 
         // in the expected shape but with a PARTIAL_PAGE label
         if (!isFullPage(row)) {
