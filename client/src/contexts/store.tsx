@@ -158,7 +158,6 @@ function useMembersSource(): {
     filteredMembers = idMembers;
   }
 
-
   // ================== DEPRECATED EXACT MATCH =============================
 
   // Filter members based on search and only present the first DISPLAY_COUNT results.

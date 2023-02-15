@@ -60,7 +60,7 @@ const PopulatedCards = () => {
                                 {m.name}
                             </h3>
                             <p className="text-gray-500 text-xs">
-                                {/* TODO !! have role in future? no everyone in track */}
+                                {/* TODO !! have role in future? not everyone in track */}
                                 {m.trackInvolvement ? m.trackInvolvement : 'n/a'}
                             </p>
                             <span className='mt-3'>

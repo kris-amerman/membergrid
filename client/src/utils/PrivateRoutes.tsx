@@ -9,7 +9,7 @@ const PrivateRoutes = ( props: any ) => {
     console.log(user)
 
     return (
-        user ? <Outlet /> : <Navigate to="/login" />
+        user ? <Outlet /> : <Navigate to="/" />
     );
 };
 
