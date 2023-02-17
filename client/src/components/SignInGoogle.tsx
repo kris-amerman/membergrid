@@ -12,7 +12,7 @@ const SignInGoogle = () => {
                 type="button"
                 className="text-sm border-[0.5px] drop-shadow-sm inline-flex items-center gap-3 
                 py-2.5 px-4 bg-white rounded-3xl w-fit text-left text-gray-500 
-                hover:bg-gray-50 hover:scale-105 duration-200"
+                hover:bg-gray-50 hover:scale-105 duration-300"
                 onClick={signInWithGoogle}
             >
                 <FcGoogle size={22} />

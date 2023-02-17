@@ -1,12 +1,16 @@
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
+import NotificationBanner from '../components/NotificationBanner';
+import IPhone from '../assets/IPhone.svg';
 
 export default function HomePage() {
   return (
     <div className=''>
+      <NotificationBanner />
       <Navbar />
       <HeroSection />
-      <h1>HomePage</h1>
+      
+      <img src={IPhone}/>
       
     </div>
   );
