@@ -28,16 +28,16 @@ const Navbar = () => {
 
     return (
         <div className='flex h-[86px]'>
-            <div className='flex flex-row w-full my-auto 
-            md:mx-32'>
-                <Link to='/' className="md:w-full md:h-full">
-                    <img className='-translate-x-4 scale-[70%] md:transform-none' src={logo} />
+            <div className='flex flex-row w-full my-auto justify-center
+            sm:mx-16 md:mx-32'>
+                <Link to='/' className="sm:w-full sm:h-full">
+                    <img className='-translate-x-12 scale-[70%] sm:scale-[90%] sm:translate-x-0 md:transform-none' src={logo} />
                 </Link>
-                <img className='translate-x-8 scale-110 md:hidden md:transform-none' src={menuIcon} />
+                <img className='scale-110 sm:hidden sm:transform-none' src={menuIcon} />
 
                 <div className='hidden flex-row gap-8 w-full justify-end
                 font-inter font-medium text-[#5D5A88]   
-                md:flex'>
+                sm:flex sm:text-sm md:text-base'>
                     {user ? <Link to='/members' className='my-auto hover:text-[#9795B5]'>Members</Link> : <></>}
                     <Link to='/about' className='my-auto hover:text-[#9795B5]'>About</Link>
                     <Link to='/contact' className='my-auto hover:text-[#9795B5]'>Contact</Link>
