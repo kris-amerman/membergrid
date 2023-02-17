@@ -1,7 +1,8 @@
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import NotificationBanner from '../components/NotificationBanner';
-import IPhone from '../assets/IPhone.svg';
+import ComingSoonSection from '../components/ComingSoonSection';
+
 
 export default function HomePage() {
   return (
@@ -9,9 +10,9 @@ export default function HomePage() {
       <NotificationBanner />
       <Navbar />
       <HeroSection />
-      
-      <img src={IPhone}/>
-      
+      <ComingSoonSection />
+
+
     </div>
   );
 };
