@@ -2,6 +2,7 @@ import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import NotificationBanner from '../components/NotificationBanner';
 import ComingSoonSection from '../components/ComingSoonSection';
+import FAQSection from '../components/FAQSection';
 
 
 export default function HomePage() {
@@ -11,7 +12,7 @@ export default function HomePage() {
       <Navbar />
       <HeroSection />
       <ComingSoonSection />
-
+      <FAQSection />
 
     </div>
   );

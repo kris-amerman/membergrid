@@ -43,7 +43,7 @@ const ComingSoonItem = (props: {
 const ComingSoonSection = () => {
     return (
         <div>
-            <div className='flex flex-col mx-20 gap-44 mt-20'>
+            <div className='flex flex-col mx-20 gap-44 mt-20 mb-20'>
                 <ComingSoonItem
                     title="Schedule coffee chats with the mobile app"
                     description="Our long-term goal is to make it easier to 

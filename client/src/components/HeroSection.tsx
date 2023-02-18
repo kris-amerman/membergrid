@@ -1,4 +1,4 @@
-import "./HeroSection.css";
+import "./Gradient.css";
 import SignInGoogle from "./SignInGoogle";
 
 const HeroSection = () => {
