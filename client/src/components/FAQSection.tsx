@@ -11,19 +11,16 @@ const FAQDropDown = (props: {
 
     const [open, setOpen] = useState(false);
     const closedStyle = `flex flex-row bg-white mx-auto p-10 
-    border-[1.5px] border-[#5D5A88] w-full rounded-xl`
+    border-[1.5px] border-[#D4D2E3] w-full rounded-xl`
     const openStyle = `flex flex-row bg-white mx-auto p-10 pb-4 
     border-[1.5px] border-[#5D5A88] w-full rounded-t-xl border-b-0`
 
     return (
         <div>
-            <div className='flex flex-col'>
+            <div onClick={() => { setOpen(!open) }} className='flex flex-col hover:cursor-pointer'>
                 <div className={open ? openStyle : closedStyle}>
                     <div className='w-full text-[#5D5A88] font-[500] text-2xl font-dmsans'>{title}</div>
-                    <img
-                        onClick={() => {setOpen(!open)}} 
-                        className={open ? 'p-2 hover:cursor-pointer' : 'p-2 hover:cursor-pointer -rotate-90'} 
-                        src={Chevron} />
+                    <img className={open ? 'p-2' : 'p-2 -rotate-90'} src={Chevron} />
                 </div>
                 { open ? 
                     <div className='bg-white rounded-b-xl mx-auto p-10 pt-0 

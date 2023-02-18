@@ -5,7 +5,7 @@ const HeroSection = () => {
     return (
         <div>
             <div className="relative h-80 md:h-[33.5rem] overflow-hidden">
-                <div className="absolute gradient opacity-75 w-full h-full" />
+                <div className="absolute gradient w-full h-full" />
                 <div className="absolute w-full h-full flex flex-col">
                     <div className="mx-auto mt-10 text-3xl font-bold text-[#5D5A88] md:text-[3.5rem] md:mt-36">Strengthen your</div>
                     <div className="mx-auto text-3xl font-bold text-[#5D5A88] md:text-[3.5rem] md:mt-8">internal network</div>

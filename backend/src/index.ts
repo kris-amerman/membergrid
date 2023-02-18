@@ -158,7 +158,7 @@ app.get('/auth/google',
 // Request GET `/auth/google/callback` on successful authentication -->
 // if failure, try again, otherwise redirect home
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login' }),
+    passport.authenticate('google', { failureRedirect: 'http://localhost:5173/' }),
     function (req, res) {
         // Successful authentication, redirect to members page.
         res.redirect('http://localhost:5173/members');

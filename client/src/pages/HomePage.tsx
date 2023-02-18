@@ -3,6 +3,7 @@ import HeroSection from '../components/HeroSection';
 import NotificationBanner from '../components/NotificationBanner';
 import ComingSoonSection from '../components/ComingSoonSection';
 import FAQSection from '../components/FAQSection';
+import Footer from '../components/Footer';
 
 
 export default function HomePage() {
@@ -13,7 +14,7 @@ export default function HomePage() {
       <HeroSection />
       <ComingSoonSection />
       <FAQSection />
-
+      <Footer />
     </div>
   );
 };

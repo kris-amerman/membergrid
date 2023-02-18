@@ -9,7 +9,7 @@ import PrivateRoutes from './utils/PrivateRoutes';
 function App() {
 
   return (
-    <div className=''>
+    <div>
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<HomePage />} />
