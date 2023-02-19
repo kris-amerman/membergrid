@@ -7,19 +7,17 @@ import {
   createContext, 
   useContext, 
   useReducer,
-  useCallback,
-  useMemo
+  useCallback
 } from 'react';
-import MiniSearch, { MatchInfo, SearchResult } from "minisearch";
-import { Search } from "react-router-dom";
+import MiniSearch, { SearchResult } from "minisearch";
 
 // Where to fetch the data from (e.g. file path or proxy URL)
 const GET_MEMBERS_ENDPOINT: string = 'http://localhost:4000/getmembers';
-// Number of members to display
+// Number of members to display (DEPRECATED)
 const DISPLAY_COUNT: number = 20;
 
 // Member entry from Notion database
-interface Member {
+export interface Member {
   id: any;
   name: string;
   isActive: string;

@@ -15,7 +15,6 @@ export default function MembersPage() {
                 <QueryClientProvider client={queryClient}>
                     <MembersProvider>
                         
-    
                         <div className='mx-auto max-w-3xl'>
                             <SearchBox />
                         </div>

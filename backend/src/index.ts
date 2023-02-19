@@ -12,7 +12,7 @@ import {
     Client,
     isFullPage,
 } from "@notionhq/client";
-import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { PageObjectResponse, PartialPageObjectResponse, QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 import { collectPaginatedAPI } from '@notionhq/client/build/src/helpers';
 
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -181,6 +181,16 @@ app.get('/getmembers', async (req, res) => {
     });
 });
 
+// Get a single member specified by the dynamic route id
+app.get('/getmember/:id', async (req, res) => {
+    ensureAuthenticated(req, res, () => {
+        retrieveMember(req.params.id).then((member) => {
+             res.send(JSON.stringify(member));
+             console.log(`Success! Sending: ${req.params.id}`)
+        })
+    });
+});
+
 // Get user endpoint (req.user has all user information)
 app.get('/getuser', (req, res) => {
     console.log(`GET session user: ${req.session ? req.session.id : undefined}`)
@@ -201,7 +211,43 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://${HOST}:${PORT}`);
 });
 
-// TODO update to work with TAMID Notion DB
+// Retrieve the data of a single member in the DB and return in a JSON format
+// TODO !! based on name property right now, but in the future use IDs
+// TODO !! how to handle duplicates (IDs)
+async function retrieveMember(userName: string): Promise<IEntry> {
+    console.log(`Retrieving user: ${userName}`);
+    if (userName === '' || userName === null) {
+        console.log('User email cannot be empty or null.');
+        return Promise.resolve(null);
+    }
+
+    // Init response and error
+    let response: QueryDatabaseResponse = null;
+    let error: any = null;
+
+    // Query the database with a custom filter that checks if the `name` 
+    // property equals the provided `userEmail`
+    try {
+        response = await notion.databases.query({
+            database_id: NOTION_DATABASE_ID,
+            filter: {
+                property: 'name',
+                rich_text: {
+                    equals: userName,
+                }
+            }
+        });
+    } catch (err: any) {
+        error = err;
+    }
+
+    const memberObject = response.results.map(m => createEntryObject(m))[0]
+
+    return memberObject;
+}
+
+
+// Checks if a given user email is present in the DB using a Notion DB query with a filter property 
 async function checkIfUserExists(userEmail: string): Promise<[boolean, any]> {
     console.log(`Looking up user: ${userEmail}`);
     if (userEmail === '' || userEmail === null) {
@@ -245,6 +291,117 @@ async function ensureAuthenticated(req: any, res: any, next: any) {
     });
 }
 
+
+function createEntryObject(row: PageObjectResponse | PartialPageObjectResponse) {
+    // If row is a `PartialPageObjectResponse`, return data 
+    // in the expected shape but with a PARTIAL_PAGE label
+    if (!isFullPage(row)) {
+        return badPageObjectResponse('PARTIAL_PAGE');
+    }
+
+    // Page id
+    console.log(row.id)
+
+    // Database entries -- hardcoded for now, in the future build a function to map through each cell, do typechecking, and switch for each type to obtain values (and just send the whole object through)
+    const nameCell = row.properties.name;
+    const isActiveCell = row.properties.isActive;
+    const tamidClassCell = row.properties.tamidClass;
+    const majorsCell = row.properties.majors;
+    const minorsCell = row.properties.minors;
+    const graduationYearCell = row.properties.graduationYear;
+    const hometownCell = row.properties.hometown;
+    const instagramCell = row.properties.instagram;
+    const linkedinCell = row.properties.linkedin;
+    const mbtiPersonalityCell = row.properties.mbtiPersonality;
+    const birthdayCell = row.properties.birthday;
+    const mentorshipStatusCell = row.properties.mentorshipStatus;
+    const northeasternEmailCell = row.properties.northeasternEmail;
+    const phoneNumberCell = row.properties.phoneNumber;
+    const pictureCell = row.properties.picture;
+    const trackInvolvementCell = row.properties.trackInvolvement;
+    const tamidChatsStatusCell = row.properties.tamidChatsStatus;
+    const isGraduatedCell = row.properties.isGraduated;
+
+    // Entry type rules
+    const typeName = nameCell.type === "title";
+    const typeIsActive = isActiveCell.type === "select";
+    const typeTamidClass = tamidClassCell.type === "select";
+    const typeMajors = majorsCell.type === "multi_select";
+    const typeMinors = minorsCell.type === "multi_select";
+    const typeGraduationYear = graduationYearCell.type === 'select';
+    const typeHometown = hometownCell.type === 'rich_text';
+    const typeInstagram = instagramCell.type === 'rich_text';
+    const typeLinkedin = linkedinCell.type === 'url';
+    const typeMbtiPersonality = mbtiPersonalityCell.type === 'multi_select';
+    const typeBirthday = birthdayCell.type === 'date';
+    const typeMentorshipStatus = mentorshipStatusCell.type === 'select';
+    const typeNortheasternEmail = northeasternEmailCell.type === 'email';
+    const typePhoneNumber = phoneNumberCell.type === 'phone_number';
+    const typePicture = pictureCell.type === 'files';
+    const typeTrackInvolvement = trackInvolvementCell.type === 'select';
+    const typeTamidChatsStatus = tamidChatsStatusCell.type === 'select';
+    const typeIsGraduated = isGraduatedCell.type === 'checkbox';
+
+    const allTypeChecks = typeName && typeIsActive && typeTamidClass &&
+        typeMajors && typeMinors && typeGraduationYear && typeHometown &&
+        typeInstagram && typeLinkedin && typeMbtiPersonality && typeBirthday &&
+        typeMentorshipStatus && typeNortheasternEmail && typePhoneNumber &&
+        typePicture && typeTrackInvolvement && typeTamidChatsStatus && typeIsGraduated
+
+    // Return valid data in the expected shape
+    if (allTypeChecks) {
+        const name = nameCell.title.length ? nameCell.title[0].plain_text : '';
+        const isActive = isActiveCell.select ? isActiveCell.select.name : '';
+        const tamidClass = tamidClassCell.select ? tamidClassCell.select.name : '';
+        const majors = majorsCell.multi_select.length ? majorsCell.multi_select.map(v => v.name) : [];
+        const minors = minorsCell.multi_select.length ? minorsCell.multi_select.map(v => v.name) : [];
+        const graduationYear = graduationYearCell.select ? graduationYearCell.select.name : '';
+        const hometown = hometownCell.rich_text.length ? hometownCell.rich_text[0].plain_text : '';
+        const instagram = instagramCell.rich_text.length ? instagramCell.rich_text[0].plain_text : '';
+        const linkedin = linkedinCell.url ? linkedinCell.url : '';
+        const mbtiPersonality = mbtiPersonalityCell.multi_select.length ? mbtiPersonalityCell.multi_select.map(v => v.name) : [];
+        const birthday = birthdayCell.date ? birthdayCell.date.start : '';
+        const mentorshipStatus = mentorshipStatusCell.select ? mentorshipStatusCell.select.name : '';
+        const northeasternEmail = northeasternEmailCell.email ? northeasternEmailCell.email : '';
+        const phoneNumber = phoneNumberCell.phone_number ? phoneNumberCell.phone_number : '';
+        const trackInvolvement = trackInvolvementCell.select ? trackInvolvementCell.select.name : '';
+        const tamidChatsStatus = tamidChatsStatusCell.select ? tamidChatsStatusCell.select.name : '';
+        const isGraduated = isGraduatedCell.checkbox;
+
+        let picture = ''
+        if (pictureCell.files.length && pictureCell.files[0].type === 'file') {
+            picture = pictureCell.files[0].file.url;
+        }
+
+        return {
+            name,
+            isActive,
+            tamidClass,
+            majors,
+            minors,
+            graduationYear,
+            hometown,
+            instagram,
+            linkedin,
+            mbtiPersonality,
+            birthday,
+            mentorshipStatus,
+            northeasternEmail,
+            phoneNumber,
+            picture,
+            trackInvolvement,
+            tamidChatsStatus,
+            isGraduated
+        };
+    }
+
+    // If a row is found that does not match the type rules, 
+    // it will still return data in the expected shape but 
+    // with a NOT_FOUND label
+    return badPageObjectResponse('NOT_FOUND');
+}
+
+
 async function retrieveDatabase() {
     console.log('Retrieving database...')
     // Query the database and wait for the result
@@ -252,115 +409,14 @@ async function retrieveDatabase() {
         notion.databases.query,
         { database_id: NOTION_DATABASE_ID }
     );
-    
+
     // Build the response list based on the Notion response
     const list: IEntry[] = response.map((row) => {
-        // If row is a `PartialPageObjectResponse`, return data 
-        // in the expected shape but with a PARTIAL_PAGE label
-        if (!isFullPage(row)) {
-            return badPageObjectResponse('PARTIAL_PAGE');
-        }
-        // Database entries -- hardcoded for now, in the future build a function to map through each cell, do typechecking, and switch for each type to obtain values (and just send the whole object through)
-        const nameCell = row.properties.name;
-        const isActiveCell = row.properties.isActive;
-        const tamidClassCell = row.properties.tamidClass;
-        const majorsCell = row.properties.majors;
-        const minorsCell = row.properties.minors;
-        const graduationYearCell = row.properties.graduationYear;
-        const hometownCell = row.properties.hometown;
-        const instagramCell = row.properties.instagram;
-        const linkedinCell = row.properties.linkedin;
-        const mbtiPersonalityCell = row.properties.mbtiPersonality;
-        const birthdayCell = row.properties.birthday;
-        const mentorshipStatusCell = row.properties.mentorshipStatus;
-        const northeasternEmailCell = row.properties.northeasternEmail;
-        const phoneNumberCell = row.properties.phoneNumber;
-        const pictureCell = row.properties.picture;
-        const trackInvolvementCell = row.properties.trackInvolvement;
-        const tamidChatsStatusCell = row.properties.tamidChatsStatus;
-        const isGraduatedCell = row.properties.isGraduated;
-
-        // Entry type rules
-        const typeName = nameCell.type === "title";
-        const typeIsActive = isActiveCell.type === "select";
-        const typeTamidClass = tamidClassCell.type === "select";
-        const typeMajors = majorsCell.type === "multi_select";
-        const typeMinors = minorsCell.type === "multi_select";
-        const typeGraduationYear = graduationYearCell.type === 'select';
-        const typeHometown = hometownCell.type === 'rich_text';
-        const typeInstagram = instagramCell.type === 'rich_text';
-        const typeLinkedin = linkedinCell.type === 'url';
-        const typeMbtiPersonality = mbtiPersonalityCell.type === 'multi_select';
-        const typeBirthday = birthdayCell.type === 'date';
-        const typeMentorshipStatus = mentorshipStatusCell.type === 'select';
-        const typeNortheasternEmail = northeasternEmailCell.type === 'email';
-        const typePhoneNumber = phoneNumberCell.type === 'phone_number';
-        const typePicture = pictureCell.type === 'files';
-        const typeTrackInvolvement = trackInvolvementCell.type === 'select';
-        const typeTamidChatsStatus = tamidChatsStatusCell.type === 'select';
-        const typeIsGraduated = isGraduatedCell.type === 'checkbox';
-
-        const allTypeChecks = typeName && typeIsActive && typeTamidClass &&
-            typeMajors && typeMinors && typeGraduationYear && typeHometown &&
-            typeInstagram && typeLinkedin && typeMbtiPersonality && typeBirthday &&
-            typeMentorshipStatus && typeNortheasternEmail && typePhoneNumber &&
-            typePicture && typeTrackInvolvement && typeTamidChatsStatus && typeIsGraduated
-
-        // Return valid data in the expected shape
-        if (allTypeChecks) {
-            const name = nameCell.title.length ? nameCell.title[0].plain_text : '';
-            const isActive = isActiveCell.select ? isActiveCell.select.name : '';
-            const tamidClass = tamidClassCell.select ? tamidClassCell.select.name : '';
-            const majors = majorsCell.multi_select.length ? majorsCell.multi_select.map(v => v.name) : [];
-            const minors = minorsCell.multi_select.length ? minorsCell.multi_select.map(v => v.name) : [];
-            const graduationYear = graduationYearCell.select ? graduationYearCell.select.name : '';
-            const hometown = hometownCell.rich_text.length ? hometownCell.rich_text[0].plain_text : '';
-            const instagram = instagramCell.rich_text.length ? instagramCell.rich_text[0].plain_text : '';
-            const linkedin = linkedinCell.url ? linkedinCell.url : '';
-            const mbtiPersonality = mbtiPersonalityCell.multi_select.length ? mbtiPersonalityCell.multi_select.map(v => v.name) : [];
-            const birthday = birthdayCell.date ? birthdayCell.date.start : '';
-            const mentorshipStatus = mentorshipStatusCell.select ? mentorshipStatusCell.select.name : '';
-            const northeasternEmail = northeasternEmailCell.email ? northeasternEmailCell.email : '';
-            const phoneNumber = phoneNumberCell.phone_number ? phoneNumberCell.phone_number : '';
-            const trackInvolvement = trackInvolvementCell.select ? trackInvolvementCell.select.name : '';
-            const tamidChatsStatus = tamidChatsStatusCell.select ? tamidChatsStatusCell.select.name : '';
-            const isGraduated = isGraduatedCell.checkbox;
-            
-            let picture = ''
-            if (pictureCell.files.length && pictureCell.files[0].type === 'file') {
-                picture = pictureCell.files[0].file.url;
-            }
-
-            return { 
-                name,
-                isActive,
-                tamidClass,
-                majors,
-                minors,
-                graduationYear,
-                hometown,
-                instagram,
-                linkedin,
-                mbtiPersonality,
-                birthday,
-                mentorshipStatus,
-                northeasternEmail,
-                phoneNumber,
-                picture,
-                trackInvolvement,
-                tamidChatsStatus,
-                isGraduated
-            };
-        }
-
-        // If a row is found that does not match the type rules, 
-        // it will still return data in the expected shape but 
-        // with a NOT_FOUND label
-        return badPageObjectResponse('NOT_FOUND');
+        return createEntryObject(row);
     });
 
     // Log response data
-    console.log(list)
+    //console.log(list)
 
     return list;
 }

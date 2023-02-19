@@ -5,6 +5,7 @@ import MembersPage from './pages/MembersPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import PrivateRoutes from './utils/PrivateRoutes';
+import MemberPage from './pages/MemberPage';
 
 function App() {
 
@@ -19,6 +20,9 @@ function App() {
           {/* Protected routes -- user must exist (TODO CSRF and JWT) */}
           <Route element={<PrivateRoutes />}>
             <Route path='/members' element={<MembersPage />} />
+            <Route path='/members'>
+              <Route path=':userId' element={<MemberPage />} />
+            </Route>
           </Route>
 
         </Routes>
