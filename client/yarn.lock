@@ -895,6 +895,11 @@ minimist@^1.2.6:
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.7.tgz"
   integrity sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==
 
+minisearch@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/minisearch/-/minisearch-6.0.1.tgz#55e40135e7e6be60f1c1c2f5ee890c334e179a86"
+  integrity sha512-Ly1w0nHKnlhAAh6/BF/+9NgzXfoJxaJ8nhopFhQ3NcvFJrFIL+iCg9gw9e9UMBD+XIsp/RyznJ/o5UIe5Kw+kg==
+
 ms@2.1.2:
   version "2.1.2"
   resolved "https://registry.npmjs.org/ms/-/ms-2.1.2.tgz"

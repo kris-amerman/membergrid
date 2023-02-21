@@ -663,6 +663,11 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
+notion-types@^6.15.6:
+  version "6.15.6"
+  resolved "https://registry.yarnpkg.com/notion-types/-/notion-types-6.15.6.tgz#eabbb28e1c514f421f0ffbf06ecdecd90e8ec8e3"
+  integrity sha512-JgLWDN4oHg/1sNdHDCeKUfdPl1AYsjOTnYkq+Zn7vITPykxbhw7nIxbAJ7owWUTro1cYTPh+GVmdX0mPiZGujg==
+
 oauth@0.9.x:
   version "0.9.15"
   resolved "https://registry.yarnpkg.com/oauth/-/oauth-0.9.15.tgz#bd1fefaf686c96b75475aed5196412ff60cfb9c1"

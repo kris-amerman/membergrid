@@ -12,7 +12,8 @@ import {
     Client,
     isFullPage,
 } from "@notionhq/client";
-import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { PageObjectResponse, PartialPageObjectResponse, QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { collectPaginatedAPI } from '@notionhq/client/build/src/helpers';
 
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
@@ -21,7 +22,23 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 // Defines the shape of an entry in the database
 interface IEntry {
     name: string;
-    info: string;
+    isActive: string;
+    tamidClass: string;
+    majors: string[];
+    minors: string[];
+    graduationYear: string;
+    hometown: string;
+    instagram: string;
+    linkedin: string;
+    mbtiPersonality: string[];
+    birthday: string;
+    mentorshipStatus: string;
+    northeasternEmail: string;
+    phoneNumber: string;
+    picture: string;
+    trackInvolvement: string;
+    tamidChatsStatus: string;
+    isGraduated: boolean;
 }
 
 // ============================= Setup =============================
@@ -32,6 +49,9 @@ const HOST = 'localhost';
 const PORT = 4000;
 // The accepted CORS origin (React application)
 const CORS_ORIGIN = 'http://localhost:5173';
+// Session cookie max age (in milliseconds; 1 hour)
+// how long before user has to sign in again on refresh
+const MAX_SESSION_AGE = 60 * 60 * 10000
 
 // Load environment variables from `.env` file into `process.env`
 dotenv.config();
@@ -76,7 +96,7 @@ app.use(
         saveUninitialized: false,
         cookie: {
             secure: false, // if true, https must be enabled 
-            maxAge: 900000 // (in milliseconds) 15 minutes
+            maxAge: MAX_SESSION_AGE
         }
     })
 );
@@ -138,7 +158,7 @@ app.get('/auth/google',
 // Request GET `/auth/google/callback` on successful authentication -->
 // if failure, try again, otherwise redirect home
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login' }),
+    passport.authenticate('google', { failureRedirect: 'http://localhost:5173/' }),
     function (req, res) {
         // Successful authentication, redirect to members page.
         res.redirect('http://localhost:5173/members');
@@ -156,7 +176,17 @@ app.get('/getmembers', async (req, res) => {
         // Fetch members
         retrieveDatabase().then((members) => {
             res.send(JSON.stringify(members));
-            console.log('Success!');
+            console.log(`Success! Num entires: ${members.length}`);
+        })
+    });
+});
+
+// Get a single member specified by the dynamic route id
+app.get('/getmember/:id', async (req, res) => {
+    ensureAuthenticated(req, res, () => {
+        retrieveMember(req.params.id).then((member) => {
+             res.send(JSON.stringify(member));
+             console.log(`Success! Sending: ${req.params.id}`)
         })
     });
 });
@@ -181,7 +211,54 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://${HOST}:${PORT}`);
 });
 
-// TODO update to work with TAMID Notion DB
+// Retrieve the data of a single member in the DB and return in a JSON format
+// TODO !! based on name property right now, but in the future use IDs
+// TODO !! how to handle duplicates (IDs)
+async function retrieveMember(userName: string): Promise<IEntry> {
+    console.log(`Retrieving user: ${userName}`);
+    if (userName === '' || userName === null) {
+        console.log('User name cannot be empty or null.');
+        return Promise.resolve(null);
+    }
+
+    // Init response and error
+    let response: QueryDatabaseResponse = null;
+    let error: any = null;
+
+    // Query the database with a custom filter that checks if the `name` 
+    // property equals the provided `userEmail`
+    try {
+        response = await notion.databases.query({
+            database_id: NOTION_DATABASE_ID,
+            filter: {
+                property: 'name',
+                rich_text: {
+                    equals: userName,
+                }
+            }
+        });
+    } catch (err: any) {
+        error = err;
+    }
+
+    const result = response.results[0]
+
+    // Gets the block content on the page
+    // TODO !! add error handling and write a function to extract and clean this data
+    const memberPageContent = await notion.blocks.children.list({
+        block_id: result.id,
+        page_size: 50,
+    });
+
+    console.log(memberPageContent.results)
+
+    const memberPropertiesObject = createEntryObject(result);
+
+    return memberPropertiesObject;
+}
+
+
+// Checks if a given user email is present in the DB using a Notion DB query with a filter property 
 async function checkIfUserExists(userEmail: string): Promise<[boolean, any]> {
     console.log(`Looking up user: ${userEmail}`);
     if (userEmail === '' || userEmail === null) {
@@ -225,40 +302,155 @@ async function ensureAuthenticated(req: any, res: any, next: any) {
     });
 }
 
+
+function createEntryObject(row: PageObjectResponse | PartialPageObjectResponse) {
+    // If row is a `PartialPageObjectResponse`, return data 
+    // in the expected shape but with a PARTIAL_PAGE label
+    if (!isFullPage(row)) {
+        return badPageObjectResponse('PARTIAL_PAGE');
+    }
+
+    // Page id
+    console.log(row.id)
+
+    // Database entries -- hardcoded for now, in the future build a function to map through each cell, do typechecking, and switch for each type to obtain values (and just send the whole object through)
+    const nameCell = row.properties.name;
+    const isActiveCell = row.properties.isActive;
+    const tamidClassCell = row.properties.tamidClass;
+    const majorsCell = row.properties.majors;
+    const minorsCell = row.properties.minors;
+    const graduationYearCell = row.properties.graduationYear;
+    const hometownCell = row.properties.hometown;
+    const instagramCell = row.properties.instagram;
+    const linkedinCell = row.properties.linkedin;
+    const mbtiPersonalityCell = row.properties.mbtiPersonality;
+    const birthdayCell = row.properties.birthday;
+    const mentorshipStatusCell = row.properties.mentorshipStatus;
+    const northeasternEmailCell = row.properties.northeasternEmail;
+    const phoneNumberCell = row.properties.phoneNumber;
+    const pictureCell = row.properties.picture;
+    const trackInvolvementCell = row.properties.trackInvolvement;
+    const tamidChatsStatusCell = row.properties.tamidChatsStatus;
+    const isGraduatedCell = row.properties.isGraduated;
+
+    // Entry type rules
+    const typeName = nameCell.type === "title";
+    const typeIsActive = isActiveCell.type === "select";
+    const typeTamidClass = tamidClassCell.type === "select";
+    const typeMajors = majorsCell.type === "multi_select";
+    const typeMinors = minorsCell.type === "multi_select";
+    const typeGraduationYear = graduationYearCell.type === 'select';
+    const typeHometown = hometownCell.type === 'rich_text';
+    const typeInstagram = instagramCell.type === 'rich_text';
+    const typeLinkedin = linkedinCell.type === 'url';
+    const typeMbtiPersonality = mbtiPersonalityCell.type === 'multi_select';
+    const typeBirthday = birthdayCell.type === 'date';
+    const typeMentorshipStatus = mentorshipStatusCell.type === 'select';
+    const typeNortheasternEmail = northeasternEmailCell.type === 'email';
+    const typePhoneNumber = phoneNumberCell.type === 'phone_number';
+    const typePicture = pictureCell.type === 'files';
+    const typeTrackInvolvement = trackInvolvementCell.type === 'select';
+    const typeTamidChatsStatus = tamidChatsStatusCell.type === 'select';
+    const typeIsGraduated = isGraduatedCell.type === 'checkbox';
+
+    const allTypeChecks = typeName && typeIsActive && typeTamidClass &&
+        typeMajors && typeMinors && typeGraduationYear && typeHometown &&
+        typeInstagram && typeLinkedin && typeMbtiPersonality && typeBirthday &&
+        typeMentorshipStatus && typeNortheasternEmail && typePhoneNumber &&
+        typePicture && typeTrackInvolvement && typeTamidChatsStatus && typeIsGraduated
+
+    // Return valid data in the expected shape
+    if (allTypeChecks) {
+        const name = nameCell.title.length ? nameCell.title[0].plain_text : '';
+        const isActive = isActiveCell.select ? isActiveCell.select.name : '';
+        const tamidClass = tamidClassCell.select ? tamidClassCell.select.name : '';
+        const majors = majorsCell.multi_select.length ? majorsCell.multi_select.map(v => v.name) : [];
+        const minors = minorsCell.multi_select.length ? minorsCell.multi_select.map(v => v.name) : [];
+        const graduationYear = graduationYearCell.select ? graduationYearCell.select.name : '';
+        const hometown = hometownCell.rich_text.length ? hometownCell.rich_text[0].plain_text : '';
+        const instagram = instagramCell.rich_text.length ? instagramCell.rich_text[0].plain_text : '';
+        const linkedin = linkedinCell.url ? linkedinCell.url : '';
+        const mbtiPersonality = mbtiPersonalityCell.multi_select.length ? mbtiPersonalityCell.multi_select.map(v => v.name) : [];
+        const birthday = birthdayCell.date ? birthdayCell.date.start : '';
+        const mentorshipStatus = mentorshipStatusCell.select ? mentorshipStatusCell.select.name : '';
+        const northeasternEmail = northeasternEmailCell.email ? northeasternEmailCell.email : '';
+        const phoneNumber = phoneNumberCell.phone_number ? phoneNumberCell.phone_number : '';
+        const trackInvolvement = trackInvolvementCell.select ? trackInvolvementCell.select.name : '';
+        const tamidChatsStatus = tamidChatsStatusCell.select ? tamidChatsStatusCell.select.name : '';
+        const isGraduated = isGraduatedCell.checkbox;
+
+        let picture = ''
+        if (pictureCell.files.length && pictureCell.files[0].type === 'file') {
+            picture = pictureCell.files[0].file.url;
+        }
+
+        return {
+            name,
+            isActive,
+            tamidClass,
+            majors,
+            minors,
+            graduationYear,
+            hometown,
+            instagram,
+            linkedin,
+            mbtiPersonality,
+            birthday,
+            mentorshipStatus,
+            northeasternEmail,
+            phoneNumber,
+            picture,
+            trackInvolvement,
+            tamidChatsStatus,
+            isGraduated
+        };
+    }
+
+    // If a row is found that does not match the type rules, 
+    // it will still return data in the expected shape but 
+    // with a NOT_FOUND label
+    return badPageObjectResponse('NOT_FOUND');
+}
+
+
 async function retrieveDatabase() {
     console.log('Retrieving database...')
     // Query the database and wait for the result
-    const response = await notion.databases.query({
-        database_id: NOTION_DATABASE_ID
-    });
+    const response = await collectPaginatedAPI(
+        notion.databases.query,
+        { database_id: NOTION_DATABASE_ID }
+    );
 
     // Build the response list based on the Notion response
-    const list: IEntry[] = response.results.map((row) => {
-        // If row is a `PartialPageObjectResponse`, return data 
-        // in the expected shape but with a PARTIAL_PAGE label
-        if (!isFullPage(row)) {
-            return { name: "PARTIAL_PAGE", info: "" };
-        }
-        // Database entries
-        const nameCell = row.properties.name
-        const infoCell = row.properties.info
-        // Entry type rules
-        const isName = nameCell.type === "title"
-        const isInfo = infoCell.type === "rich_text"
-        // Return valid data in the expected shape
-        if (isName && isInfo) {
-            const name = nameCell.title.length ? nameCell.title?.[0].plain_text : '';
-            const info = infoCell.rich_text.length ? infoCell.rich_text?.[0].plain_text : '';
-            return { name, info };
-        }
-        // If a row is found that does not match the type rules, 
-        // it will still return data in the expected shape but 
-        // with a NOT_FOUND label
-        return { name: "NOT_FOUND", info: "" };
+    const list: IEntry[] = response.map((row) => {
+        return createEntryObject(row);
     });
 
     // Log response data
-    console.log(list)
+    //console.log(list)
 
     return list;
+}
+
+function badPageObjectResponse(errorName: string): IEntry {
+    return {
+        name: errorName,
+        isActive: '',
+        tamidClass: '',
+        majors: [],
+        minors: [],
+        graduationYear: '',
+        hometown: '',
+        instagram: '',
+        linkedin: '',
+        mbtiPersonality: [],
+        birthday: '',
+        mentorshipStatus: '',
+        northeasternEmail: '',
+        phoneNumber: '',
+        picture: '',
+        trackInvolvement: '',
+        tamidChatsStatus: '',
+        isGraduated: false
+    };
 }
