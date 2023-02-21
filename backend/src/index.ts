@@ -217,7 +217,7 @@ app.listen(PORT, () => {
 async function retrieveMember(userName: string): Promise<IEntry> {
     console.log(`Retrieving user: ${userName}`);
     if (userName === '' || userName === null) {
-        console.log('User email cannot be empty or null.');
+        console.log('User name cannot be empty or null.');
         return Promise.resolve(null);
     }
 
@@ -241,9 +241,20 @@ async function retrieveMember(userName: string): Promise<IEntry> {
         error = err;
     }
 
-    const memberObject = response.results.map(m => createEntryObject(m))[0]
+    const result = response.results[0]
 
-    return memberObject;
+    // Gets the block content on the page
+    // TODO !! add error handling and write a function to extract and clean this data
+    const memberPageContent = await notion.blocks.children.list({
+        block_id: result.id,
+        page_size: 50,
+    });
+
+    console.log(memberPageContent.results)
+
+    const memberPropertiesObject = createEntryObject(result);
+
+    return memberPropertiesObject;
 }
 
 
