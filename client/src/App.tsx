@@ -17,7 +17,7 @@ function App() {
           <Route path='/about' element={<AboutPage />} />
           <Route path='/contact' element={<ContactPage />} />
 
-          {/* Protected routes -- user must exist (TODO CSRF and JWT) */}
+          {/* Protected routes -- user must exist (TODO CSRF and JWT)! */}
           <Route element={<PrivateRoutes />}>
             <Route path='/members' element={<MembersPage />} />
             <Route path='/members'>
