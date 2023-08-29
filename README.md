@@ -1,5 +1,5 @@
 ## Welcome to Membergrid! 🥳
-### 🚧 We are undergoing a migration to Next13! A new, publicly-available repository will be available soon :) 🚧
+#### 🚧 We are undergoing a migration to Next13! A new, publicly-available repository will be available soon :) 🚧
 
 Please note: This is a work in progress. Please do not share or distribute this material.
 
